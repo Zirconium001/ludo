@@ -1,3 +1,0 @@
-[build]
-  functions = "netlify/functions"  # This tells Netlify where to find serverless functions
-  publish = "public"  # Your static site files (adjust if needed)
