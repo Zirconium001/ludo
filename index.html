@@ -66,18 +66,38 @@
     db.ref("players").on("value", checkPlayers);
 
     p1Btn.onclick = () => {
-      db.ref("players").update({ p1: true }).then(() => {
-        localStorage.setItem("player", "X");
-        window.location.href = "game.html";
-      });
-    };
+  db.ref("players/p1").transaction(current => {
+    if (current === null) {
+      return true;
+    } else {
+      return; // already taken
+    }
+  }).then(result => {
+    if (result.committed) {
+      localStorage.setItem("player", "X");
+      window.location.href = "game.html";
+    } else {
+      alert("Player 1 slot is already taken.");
+    }
+  });
+};
 
-    p2Btn.onclick = () => {
-      db.ref("players").update({ p2: true }).then(() => {
-        localStorage.setItem("player", "O");
-        window.location.href = "game.html";
-      });
-    };
+p2Btn.onclick = () => {
+  db.ref("players/p2").transaction(current => {
+    if (current === null) {
+      return true;
+    } else {
+      return; // already taken
+    }
+  }).then(result => {
+    if (result.committed) {
+      localStorage.setItem("player", "O");
+      window.location.href = "game.html";
+    } else {
+      alert("Player 2 slot is already taken.");
+    }
+  });
+};
   </script>
 </body>
 </html>
