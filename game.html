@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tic Tac Toe Game</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f0f8ff;
+      text-align: center;
+      padding: 30px;
+    }
+    h1 {
+      font-size: 2.5rem;
+      color: #ff4081;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      gap: 10px;
+      justify-content: center;
+      margin: 40px auto;
+    }
+    .cell {
+      width: 100px;
+      height: 100px;
+      font-size: 2rem;
+      background: #fff;
+      border: 2px solid #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .cell.taken {
+      cursor: not-allowed;
+    }
+    #status {
+      font-size: 1.2rem;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tic Tac Toe</h1>
+  <div class="board" id="board">
+    <div class="cell" data-id="0"></div>
+    <div class="cell" data-id="1"></div>
+    <div class="cell" data-id="2"></div>
+    <div class="cell" data-id="3"></div>
+    <div class="cell" data-id="4"></div>
+    <div class="cell" data-id="5"></div>
+    <div class="cell" data-id="6"></div>
+    <div class="cell" data-id="7"></div>
+    <div class="cell" data-id="8"></div>
+  </div>
+  <p id="status">Loading game...</p>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "YOUR-KEY",
+      authDomain: "YOUR-DOMAIN",
+      databaseURL: "YOUR-DATABASE-URL",
+      projectId: "YOUR-ID",
+      storageBucket: "YOUR-BUCKET",
+      messagingSenderId: "YOUR-SENDER-ID",
+      appId: "YOUR-APP-ID"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const player = localStorage.getItem("player");
+    const boardEl = document.getElementById("board");
+    const statusEl = document.getElementById("status");
+    let currentTurn = "X";
+
+    function render(board) {
+      document.querySelectorAll(".cell").forEach((cell, i) => {
+        cell.textContent = board[i] || "";
+        if (board[i]) cell.classList.add("taken");
+      });
+    }
+
+    function checkWinner(board) {
+      const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+      for (let [a,b,c] of wins) {
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) return board[a];
+      }
+      if (!board.includes("")) return "Draw";
+      return null;
+    }
+
+    db.ref("game/board").on("value", snapshot => {
+      const board = snapshot.val() || Array(9).fill("");
+      render(board);
+
+      const winner = checkWinner(board);
+      if (winner) {
+        statusEl.textContent = winner === "Draw" ? "It's a draw!" : `${winner} wins!`;
+      } else {
+        statusEl.textContent = `${currentTurn}'s turn`;
+      }
+    });
+
+    db.ref("game/turn").on("value", snapshot => {
+      currentTurn = snapshot.val() || "X";
+    });
+
+    boardEl.addEventListener("click", e => {
+      const cell = e.target;
+      const index = cell.dataset.id;
+
+      db.ref("game/board").once("value").then(snapshot => {
+        const board = snapshot.val() || Array(9).fill("");
+        if (!board[index] && currentTurn === player) {
+          board[index] = player;
+          db.ref("game").update({
+            board,
+            turn: player === "X" ? "O" : "X"
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
