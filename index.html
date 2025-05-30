@@ -56,8 +56,9 @@
 
     function checkPlayers(snapshot) {
       const players = snapshot.val() || {};
-      p1Btn.disabled = players.p1 !== null;
-      p2Btn.disabled = players.p2 !== null;
+      p1Btn.disabled = players.p1 === true;
+      p2Btn.disabled = players.p2 === true;
+
       if (players.p1 && players.p2) {
         status.innerText = "Game is starting...";
       }
